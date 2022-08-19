@@ -7,7 +7,7 @@ Learning Embodied Intuitive Physics with Baxter Robot in simulation.
 
 ## ROS/Gazebo Installation
 
-1. Source ROS distor
+1. Source ROS distribution
 ```
 source /opt/ros/<kinetic/noetic>/setup.bash
 ```
