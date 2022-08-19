@@ -12,7 +12,7 @@ import gazebo_msgs.msg
 from scipy.spatial.transform import Rotation
 
 # converters
-import utils
+from . import utils
 
 
 # ------------------------------ Constants ------------------------------
@@ -41,7 +41,7 @@ class Environment():
     def getObservation(self):
         """
         Get x,y of centre and orientation of object normalized to [-1,1]
-        
+
         return: [x, y, qx, qy, qz, qw]
         """
         pose = self.cube.getPose()
@@ -60,7 +60,7 @@ class Environment():
 
 class Cube:
     """
-    Cube publisher and subscriber wrapper class for easily setting cube properties 
+    Cube publisher and subscriber wrapper class for easily setting cube properties
     and getting them
     """
 
@@ -93,10 +93,10 @@ class Cube:
 
         x: x-axis center position of cube in wspace normalized ([-1,1])
         y: y-axis center position of cube in wspace normalized ([-1,1])
-        yaw: yaw of cube normalized ([-1,1] == [-pi, pi]) 
+        yaw: yaw of cube normalized ([-1,1] == [-pi, pi])
         """
         x = utils.norm2width(x)
-        y = utils.norm2height(y) 
+        y = utils.norm2height(y)
         yaw = utils.norm2angle(yaw)
 
         pos_vel = [x, y, GAZEBO_CUBE_HEIGHT, yaw]
@@ -129,7 +129,7 @@ class Cube:
 
         return: True if cube has fallen from workspace, else False
         """
-        return self.subCube.link_pose.position.z < GAZEBO_BOX_HEIGHT 
+        return self.subCube.link_pose.position.z < GAZEBO_BOX_HEIGHT
 
 
 class GazeboLinkPose:
@@ -150,7 +150,7 @@ class GazeboLinkPose:
     """
     Create link pose subscriber using link_name
 
-    link_name: name of link whose pose is of interest 
+    link_name: name of link whose pose is of interest
                in /gazebo/link_states rostopic
     """
     self.link_name = link_name
@@ -166,7 +166,7 @@ class GazeboLinkPose:
     function that periodically updates link_pose using data from link_states subscriber
 
     data: gazebo_msgs.msg.LinkStates including desired link pose information
-    """ 
+    """
     try:
       ind = data.name.index(self.link_name)
       self.link_pose = data.pose[ind]

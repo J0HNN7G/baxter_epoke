@@ -1,4 +1,8 @@
+#!/usr/bin/env python3
+# noetic
+
 #!/usr/bin/env python
+# kinetic
 
 
 # Steps to run this code
@@ -35,12 +39,12 @@ def setupNode():
 def endNode():
     """End Rospy and MoveIt nodes"""
     moveit_commander.roscpp_shutdown()
-    moveit_commander.os._exit(0) 
+    moveit_commander.os._exit(0)
 
 
 class SceneInterface():
     """
-    Wrapper class for MoveIt PlanningSceneInterface for cleaner 
+    Wrapper class for MoveIt PlanningSceneInterface for cleaner
     use when adding objects
     """
 
@@ -62,15 +66,15 @@ class SceneInterface():
 
         p = geometry_msgs.msg.PoseStamped()
         p.header.frame_id = robot.get_planning_frame()
-        p.pose.position.x = 0.95 
-        p.pose.position.y = 0 
+        p.pose.position.x = 0.95
+        p.pose.position.y = 0
         p.pose.position.z = -0.55
         scene.add_box('table', p, (1.3, 1.3, 0.73))
 
         p = geometry_msgs.msg.PoseStamped()
         p.header.frame_id = robot.get_planning_frame()
-        p.pose.position.x = 0.6 
-        p.pose.position.y = 0 
+        p.pose.position.x = 0.6
+        p.pose.position.y = 0
         p.pose.position.z = -0.55 + 0.73 / 2 + 0.07 / 2
         scene.add_box('box', p, (0.22, 0.31, 0.07))
 
@@ -116,12 +120,12 @@ def main(env, robot, agent):
     success = False
     while not success:
         x = src.utils.prop2norm(np.random.rand())
-        y = src.utils.prop2norm(np.random.rand())  
+        y = src.utils.prop2norm(np.random.rand())
         t = src.utils.prop2norm(np.random.rand())
         l = np.random.rand()
 
         success = robot.doPoke(x,y,t,l)
-        
+
     upOutcome, restOutcome = robot.doReset()
 
 
@@ -135,17 +139,17 @@ if __name__ == '__main__':
         # environment
         env = Environment()
         env.cube.resetPose(0.5,0.75,0.25)
-        
+
         # body
         robot = Baxter()
         robot.start()
 
-        # agent 
+        # agent
         agent = None # TODO
 
         main(env, robot, agent)
 
-        # clean up everything (kill topics, unallocate resources, 
+        # clean up everything (kill topics, unallocate resources,
         # remove scene objects)
         robot.stop()
         sceneInterface.endScene()
