@@ -1,5 +1,9 @@
 # baxter_epoke
-Learning Embodied Intuitive Physics with Baxter Robot
+Learning Embodied Intuitive Physics with Baxter Robot in simulation.
+
+## Experiment
+
+```scripts/main.py``` is the code central to experimental set up.
 
 ## ROS/Gazebo Installation
 
@@ -55,5 +59,5 @@ roslaunch baxter_epoke moveit_init.launch
 ```
 source ~/baxter_ws/devel/setup.bash
 rosrun baxter_tools enable_robot.py -e
-rosrun baxter_tools tuck_arms -u
+rosrun baxter_tools tuck_arms.py -u
 ```
