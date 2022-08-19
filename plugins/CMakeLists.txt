@@ -13,5 +13,9 @@ link_directories(${GAZEBO_LIBRARY_DIRS})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
 
 # Build Cube plugin
-add_library(cube_plugin SHARED cube_plugin.cpp)
+if(${gazebo_VERSION_MAJOR} EQUAL 7)
+  add_library(cube_plugin SHARED cube_plugin_gz7.cpp)
+elseif(${gazebo_VERSION_MAJOR} EQUAL 11)
+  add_library(cube_plugin SHARED cube_plugin_gz11.cpp)
+endif()
 target_link_libraries(cube_plugin ${GAZEBO_LIBRARIES} ${roscpp_LIBRARIES})

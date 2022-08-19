@@ -16,7 +16,7 @@ import tf.transformations
 import baxter_interface
 
 # converters
-import utils
+from . import utils
 
 
 # ------------------------------ Constants ------------------------------
@@ -40,19 +40,19 @@ RIGHT_ARM_REST_POSE.orientation.z = 0
 RIGHT_ARM_REST_POSE.orientation.w = 0
 
 # joint values for both_arms to be in pre-poke poses
-REST_JOINT_VALUES = [1.379237576377398, 
-                     -1.3552826203873272, 
-                     -0.7101624079848046, 
-                     2.55631837129957, 
+REST_JOINT_VALUES = [1.379237576377398,
+                     -1.3552826203873272,
+                     -0.7101624079848046,
+                     2.55631837129957,
                      0.30652245076879225,
-                     0.4115804369116125, 
-                     1.3712037894457447, 
-                     0.8472704724475024, 
-                     -0.8636687059230441, 
-                     0.5490456620193518, 
-                     1.7160365713575505, 
-                     -0.46433543710437775, 
-                     0.8569118416172481, 
+                     0.4115804369116125,
+                     1.3712037894457447,
+                     0.8472704724475024,
+                     -0.8636687059230441,
+                     0.5490456620193518,
+                     1.7160365713575505,
+                     -0.46433543710437775,
+                     0.8569118416172481,
                      2.387166897523091]
 
 # maximum number of tries when planning with MoveIt
@@ -63,15 +63,15 @@ MAX_TRIES = 10
 
 def prop2len(value):
     """Convert from [0,1] to length of poke (in metres)"""
-    return utils.scale2scale(value,  
-                       oMin = 0,                     
-                       nMin = POKE_MIN_LENGTH, 
+    return utils.scale2scale(value,
+                       oMin = 0,
+                       nMin = POKE_MIN_LENGTH,
                        nMax = POKE_MAX_LENGTH)
 
 
 def norm2wrist(value):
     """
-    Convert from [-1,1] to [-175,175] degrees (in radians) for calculating 
+    Convert from [-1,1] to [-175,175] degrees (in radians) for calculating
     points composing poke and how to twist baxter wrist for poke
     """
     return value * WRIST_ABS_MAX
@@ -79,13 +79,13 @@ def norm2wrist(value):
 
 def cm2grip(value, oMin=0.85, oMax=5.0):
     """
-    Convert from desired grip width (in centimetres) to grip value for baxter 
+    Convert from desired grip width (in centimetres) to grip value for baxter
     right gripper
 
     value: desired right gripper grasp width (in cm)
     oMin: right gripper minimum grasp width (in cm)
     oMax: right gripper maximum grasp width (in cm)
-    return: remapping of desired gripper grasp (in cm) to corresponding value 
+    return: remapping of desired gripper grasp (in cm) to corresponding value
             in gripper interface
     """
     return utils.scale2scale(value, oMin, oMax, 0, 100)
@@ -102,9 +102,15 @@ def multiTryPlan(commander, max_tries=MAX_TRIES):
     return: plan if search was successful, else None
     """
     plan = commander.plan()
+    if isinstance(plan, tuple): # MoveIt Ros Noetic compatibility
+        plan = plan[1]
+
     num_tries = 1
     while (not plan.joint_trajectory.points) and (num_tries < max_tries):
         plan = commander.plan()
+        if isinstance(plan, tuple): # MoveIt Ros Noetic compatibility
+            plan = plan[1]
+
         num_tries += 1
 
     if not plan.joint_trajectory.points:
@@ -118,7 +124,7 @@ def multiTryCartesianPlan(commander, waypoints, max_tries=MAX_TRIES):
     Attempt to find a MoveIt cartesian trajectory plan multiple times
 
     commander: MoveIt commander
-    waypoints: pose targets for commander to reach sequentially with 
+    waypoints: pose targets for commander to reach sequentially with
                cartesian trajectory
     max_tries: number of times to try finding a plan
     return: plan if search was successful, else None
@@ -146,7 +152,7 @@ def validCartesianPlan(plan, fraction):
     Check if MoveIt cartesian plan is successful
 
     plan: MoveIt cartesian plan
-    fraction: proportion of trajectory commander can follow from plan 
+    fraction: proportion of trajectory commander can follow from plan
     return: True if plan is successful, else False
     """
     return plan.joint_trajectory.points and (fraction == 1)
@@ -154,13 +160,13 @@ def validCartesianPlan(plan, fraction):
 
 def slowDownPlan(plan, speed_scale):
     """
-    Cartesian trajectory is too fast. This method scales it by a desired 
+    Cartesian trajectory is too fast. This method scales it by a desired
     factor for a safe execution
 
     plan: MoveIt cartesian plan
-    speed_scale: proportion of speed from the original trajectory plan 
+    speed_scale: proportion of speed from the original trajectory plan
                  that is desired in new plan
-    return: cartesian trajectory plan slowed down 
+    return: cartesian trajectory plan slowed down
     """
     slow_plan = moveit_msgs.msg.RobotTrajectory()
     slow_plan.joint_trajectory = plan.joint_trajectory
@@ -198,7 +204,7 @@ def formatPoke(x, y, theta, length):
 
 def reorientYaw(theta):
     """Make theta (in radians) perpendicular so yaw is as desired during poke"""
-    theta += np.pi / 2 
+    theta += np.pi / 2
     if theta > WRIST_ABS_MAX:
         theta -= np.pi
     return theta
@@ -241,7 +247,7 @@ class Baxter:
 
         for eef in eef_names:
             control = moveit_commander.MoveGroupCommander(eef)
-        
+
             # prevent fast motion
             control.set_max_velocity_scaling_factor(0.5)
             control.set_max_acceleration_scaling_factor(0.3)
@@ -294,7 +300,7 @@ class Baxter:
         gripper_name: string name of desired gripper (left/right)
         dist: desired grasp width (in cm)
         """
-        self.grippers[gripper_name].command_position(cm2grip(dist)) 
+        self.grippers[gripper_name].command_position(cm2grip(dist))
 
 
     # ------------------------------ Reset Pose Action ------------------------------
@@ -311,7 +317,7 @@ class Baxter:
 
     def planRightArmUp(self):
         """
-        Plan reset from post-poke action to pre-poke joint values without disturbing 
+        Plan reset from post-poke action to pre-poke joint values without disturbing
         colliding with objects by moving right arm upwards 10 centimeters
 
         return: upward 10cm right arm motion plan if successful, else None
@@ -323,8 +329,8 @@ class Baxter:
         p1_pose.position.z = POKE_HEIGHT + 0.10
         waypoints.append(p1_pose)
 
-        # originally used for resetting by pose, we do this by joint values 
-        # in planBothArmReset 
+        # originally used for resetting by pose, we do this by joint values
+        # in planBothArmReset
         # p2_pose = copy.deepcopy(p1_pose)
         # p2_pose.position.x = RIGHT_ARM_REST_POSE.position.x
         # p2_pose.position.y = RIGHT_ARM_REST_POSE.position.y
@@ -346,9 +352,9 @@ class Baxter:
         """
         Plan rest joint values for both arms.
 
-        return: True, if successful plan found, else False 
+        return: True, if successful plan found, else False
         """
-        self.controls['both_arms'].set_joint_value_target(REST_JOINT_VALUES) 
+        self.controls['both_arms'].set_joint_value_target(REST_JOINT_VALUES)
 
         rospy.loginfo("Resetting: Planning reset joint values")
         plan = multiTryPlan(self.controls['both_arms']) # is this actually doing something? verify
@@ -365,9 +371,9 @@ class Baxter:
         """
         Plan and execute post-poke reset to pre-poke pose
 
-        return: [bool1, bool2]; bool1 is True if successful upward motion plan 
-                is found, else False; bool2 is True if joint value rest plan is 
-                found, else False 
+        return: [bool1, bool2]; bool1 is True if successful upward motion plan
+                is found, else False; bool2 is True if joint value rest plan is
+                found, else False
         """
         upwardPlan = self.planRightArmUp()
         if upwardPlan is not None:
@@ -440,7 +446,7 @@ class Baxter:
     def executePoke(self, plan):
         """
         Execute a poke plan with given arm and gripper
-        
+
         plan: poke plan for right arm
         """
         rospy.loginfo("Poking: Executing poke")
@@ -457,7 +463,7 @@ class Baxter:
         y: poke centre y-axis value (in metres)
         theta: angle of poke (in radians) w.r.t to baxter base frame
         length: length of poke (in metres)
-        return: True if successful poke plan is found, else False       
+        return: True if successful poke plan is found, else False
         """
         pokePlan = self.planPoke(x, y, theta, length)
         if pokePlan:

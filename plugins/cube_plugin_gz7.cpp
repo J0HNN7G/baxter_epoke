@@ -47,7 +47,7 @@ namespace gazebo
           // the Gazebo node
           this->rosNode.reset(new ros::NodeHandle("gazebo_client"));
 
-          // Create a named topic 
+          // Create a named topic
           ros::SubscribeOptions so = ros::SubscribeOptions::create<std_msgs::Float32MultiArray>(
               "/" + this->model->GetName() + "/position_velocity_cmd",
               100,
@@ -136,4 +136,3 @@ namespace gazebo
 }
 
 #endif // _CUBE_PLUGIN_HH_
-
