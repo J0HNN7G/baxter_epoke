@@ -1,8 +1,8 @@
-#!/usr/bin/env python3
-# noetic
-
 #!/usr/bin/env python
 # kinetic
+
+#!/usr/bin/env python3
+# noetic
 
 
 # Steps to run this code
