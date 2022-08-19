@@ -7,16 +7,17 @@ Learning Embodied Intuitive Physics with Baxter Robot in simulation.
 
 ## ROS/Gazebo Installation
 
-1. Source ROS distribution
+#### 1. Source ROS distribution
 ```
 source /opt/ros/<kinetic/noetic>/setup.bash
 ```
 
-2. Create workspace
+#### 2. Create workspace
 ```
 mkdir -p ~/baxter_ws/src
 ```
-3. Download packages
+
+#### 3. Download packages
 ```
 cd ~/baxter_ws/src
 wstool init .
@@ -24,7 +25,7 @@ wstool merge https://raw.githubusercontent.com/J0HNN7G/baxter_epoke/main/<kineti
 wstool update
 ```
 
-4. Build ```baxter_epoke``` plugins
+#### 4. Build ```baxter_epoke``` plugins
 ```
 cd cd ~/baxter_ws/src/baxter_epoke/plugins
 mkdir build
@@ -33,7 +34,20 @@ cmake ../
 make
 ```
 
-5. Build workspace
+#### 5. Comment out lines causing errors
+Lines 78-79 from 
+```
+~/baxter_ws/src/baxter_interface/src/joint_trajectory_action/joint_trajectory_action.py
+```
+when left uncommented
+```
+        self._cuff = baxter_interface.DigitalIO('%s_lower_cuff' % (limb,))
+        self._cuff.state_changed.connect(self._cuff_cb)
+```
+gave me issues with using MoveIt to control Baxter.  
+
+
+#### 6. Build workspace
 ```
 cd ~/baxter_ws/
 catkin build
