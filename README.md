@@ -19,7 +19,7 @@ mkdir -p ~/baxter_ws/src
 ```
 cd ~/baxter_ws/src
 wstool init .
-wstool merge https://raw.githubusercontent.com/J0HNN7G/baxter_epoke/main/<kinetic/noetic>.rosinstall
+wstool merge https://raw.githubusercontent.com/J0HNN7G/baxter_epoke/main/rosinstall/<kinetic/noetic>.rosinstall
 wstool update
 ```
 #### 4. Build ```baxter_epoke``` plugins
