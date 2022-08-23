@@ -5,12 +5,6 @@
 # noetic
 
 
-# Steps to run this code
-# 1) roslaunch baxter gazebo launch script
-# 2) roslaunch baxter_moveit_tutorial init_moveit.launch
-# 3) rosrun baxter_moveit_tutorial main.py
-
-
 # general
 import sys
 import numpy as np
