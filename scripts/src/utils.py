@@ -95,3 +95,22 @@ def angle2norm(value):
     return scale2scale(value,                       
                        oMin = -np.pi, 
                        oMax = np.pi) 
+
+
+# ------------------------------ Actions ------------------------------
+
+
+def randomAction():
+    """
+    Agent returns random action
+
+    return: [x,y,t,l]; x is poke centre x-axis value (in metres);
+    y is poke centre y-axis value (in metres); t is angle of 
+    poke (in radians) w.r.t to baxter base frame; l is length of 
+    poke (in metres)
+    """
+    x = prop2norm(np.random.rand())
+    y = prop2norm(np.random.rand())
+    t = prop2norm(np.random.rand())
+    l = np.random.rand()
+    return [x, y, t, l]

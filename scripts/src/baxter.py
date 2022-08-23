@@ -371,28 +371,31 @@ class Baxter:
         """
         Plan and execute post-poke reset to pre-poke pose
 
-        return: [bool1, bool2]; bool1 is True if successful upward motion plan
-                is found, else False; bool2 is True if joint value rest plan is
-                found, else False
+        return: (bool1, bool2, bool3, bool4); bool1 is True if successful upward motion plan found
+                bool2 is True is succesful upward motion execution; bool3 is True if succesful if joint value 
+                rest plan is executed found; bool4 is True if joint value rest plan is executed successfully
         """
         upwardPlan = self.planRightArmUp()
         if upwardPlan is not None:
             rospy.loginfo("Resetting: Executing upward move")
-            self.controls['right_arm'].execute(upwardPlan, wait=True)
+            upwardSuccess = self.controls['right_arm'].execute(upwardPlan, wait=True)
             self.controls['right_arm'].stop()
         else:
-            return [False, False]
+            return (False, False, False, False)
+
+        if not upwardSuccess:
+            return (True, False, False, False)
 
         if self.planBothArmReset():
             rospy.loginfo("Resetting: Executing reset joint values")
-            self.controls['both_arms'].go(wait=True)
+            restSuccess = self.controls['both_arms'].go(wait=True)
             self.controls['both_arms'].stop()
         else:
-            return [True, False]
+            return (True, True, False, False)
 
         self.grippers['right'].close()
 
-        return [True, True]
+        return (True, True, True, restSuccess)
 
 
     # ------------------------------ Poke Action ------------------------------
@@ -434,7 +437,7 @@ class Baxter:
         pokeStr = formatPoke(x,y,theta,length)
         rospy.loginfo("Poking: Planning poke: " + pokeStr)
 
-        plan = multiTryCartesianPlan(self.controls['right_arm'], waypoints, max_tries=1)
+        plan = multiTryCartesianPlan(self.controls['right_arm'], waypoints, max_tries=MAX_TRIES)
         if plan is None:
             rospy.loginfo("Poking: [ERROR] No plan")
         else:
@@ -448,11 +451,12 @@ class Baxter:
         Execute a poke plan with given arm and gripper
 
         plan: poke plan for right arm
+        return: True if poke plan is executed succesfully, else False
         """
         rospy.loginfo("Poking: Executing poke")
         self.grippers['right'].close()
         rospy.sleep(0.1)
-        self.controls['right_arm'].execute(plan, wait=True)
+        return self.controls['right_arm'].execute(plan, wait=True)
 
 
     def doPoke(self, x, y, theta, length):
@@ -463,10 +467,9 @@ class Baxter:
         y: poke centre y-axis value (in metres)
         theta: angle of poke (in radians) w.r.t to baxter base frame
         length: length of poke (in metres)
-        return: True if successful poke plan is found, else False
+        return: [bool1, bool2]; bool1 true if successful poke plan is found; bool2 true if execution is successful
         """
         pokePlan = self.planPoke(x, y, theta, length)
         if pokePlan:
-            self.executePoke(pokePlan)
-            return True
-        return False
+            return (True, self.executePoke(pokePlan))
+        return (False, False)

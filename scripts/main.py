@@ -18,12 +18,12 @@ import numpy as np
 # ros/moveit
 import rospy
 import moveit_commander
-import geometry_msgs.msg
 
 # environment/robot/agent
+import src.utils
 from src.environment import Environment
 from src.baxter import Baxter
-import src.utils
+from src.model.random import RandomAgent
 
 
 # ------------------------------ ROS/MoveIt ------------------------------
@@ -42,58 +42,12 @@ def endNode():
     moveit_commander.os._exit(0)
 
 
-class SceneInterface():
-    """
-    Wrapper class for MoveIt PlanningSceneInterface for cleaner
-    use when adding objects
-    """
-
-    # scene which MoveIt is using for planning
-    scene = None
-
-
-    def __init__(self):
-        """Do not want unintended objects during initialization"""
-        pass
-
-
-    def setupScene(self):
-        """Set up the scene for collision avoidant motion planning"""
-        robot = moveit_commander.RobotCommander()
-        scene = moveit_commander.PlanningSceneInterface()
-
-        rospy.sleep(0.5)
-
-        p = geometry_msgs.msg.PoseStamped()
-        p.header.frame_id = robot.get_planning_frame()
-        p.pose.position.x = 0.95
-        p.pose.position.y = 0
-        p.pose.position.z = -0.55
-        scene.add_box('table', p, (1.3, 1.3, 0.73))
-
-        p = geometry_msgs.msg.PoseStamped()
-        p.header.frame_id = robot.get_planning_frame()
-        p.pose.position.x = 0.6
-        p.pose.position.y = 0
-        p.pose.position.z = -0.55 + 0.73 / 2 + 0.07 / 2
-        scene.add_box('box', p, (0.22, 0.31, 0.07))
-
-        self.scene = scene
-
-
-    def endScene(self):
-        """Remove all objects from the MoveIt scene"""
-
-        rospy.sleep(0.25)
-
-        for name in self.scene.get_objects().keys():
-            self.scene.remove_world_object(name)
-
-
 # ------------------------------ Default parameters ------------------------------
 
 LEARNING_RATE = 0.1
 DISCOUNT = 0.95
+
+# number of episodes
 EPISODES = 20
 
 # Exploration settings
@@ -117,42 +71,57 @@ LENGTH_SPLIT = 3
 # ------------------------------ Main ------------------------------
 
 def main(env, robot, agent):
-    success = False
-    while not success:
-        x = src.utils.prop2norm(np.random.rand())
-        y = src.utils.prop2norm(np.random.rand())
-        t = src.utils.prop2norm(np.random.rand())
-        l = np.random.rand()
+    for n in range(EPISODES):
+        rospy.loginfo('\n\n\nEPISODE ' + str(n))
+        env.reset()
+        obs = env.getState()
 
-        success = robot.doPoke(x,y,t,l)
+        while not env.done():
+            action = agent.act(obs)
 
-    upOutcome, restOutcome = robot.doReset()
+            rospy.loginfo('\n\nACTION ' + str(env.num_actions))
+            
+            pokeOutcomes = robot.doPoke(*action)
+            if not all(pokeOutcomes):
+                #tuck_arms(True) TODO
+                break
+            else:
+                env.num_actions += 1
+
+            env.addCubeMoveIt()
+            resetOutcomes = robot.doReset()
+            env.removeCubeMoveIt()
+            if not all(resetOutcomes):
+                #tuck_arms(True) TODO
+                break
+                
+            new_obs, reward = env.getObservation()
+            agent.learn(obs, action, new_obs, reward)
+            obs = new_obs
 
 
 if __name__ == '__main__':
     try:
         # rospy + MoveIt
         setupNode()
-        sceneInterface = SceneInterface()
-        sceneInterface.setupScene()
 
         # environment
         env = Environment()
-        env.cube.resetPose(0.5,0.75,0.25)
+        env.setupSceneMoveIt()
 
         # body
         robot = Baxter()
         robot.start()
 
         # agent
-        agent = None # TODO
+        agent = RandomAgent()
 
         main(env, robot, agent)
 
         # clean up everything (kill topics, unallocate resources,
         # remove scene objects)
         robot.stop()
-        sceneInterface.endScene()
+        env.endSceneMoveIt()
         endNode()
     except rospy.ROSInterruptException:
         pass
