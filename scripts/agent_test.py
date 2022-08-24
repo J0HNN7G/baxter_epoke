@@ -1,3 +1,10 @@
+#!/usr/bin/env python3
+# noetic
+
+#!/usr/bin/env python
+# kinetic
+
+
 import gym
 from src.model.QLearningAgent import QLearningAgent
 from tqdm import tqdm #used for loading bars
@@ -20,6 +27,9 @@ def train():
         alpha=ALPHA,
         epsilon=EPSILON,
     )
+
+    print(env.action_space)
+    print(env.observation_space)
 
     step_counter = 0
     max_steps = TOTAL_EPS * EP_MAX_STEPS
@@ -47,7 +57,7 @@ def train():
 
         total_reward += episodic_return
         ep_rewards.append(episodic_return)
-    
+
     return total_reward, agent.q_table, ep_rewards
 
 
