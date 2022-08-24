@@ -74,7 +74,7 @@ def main(env, robot, agent):
             action = agent.act(obs)
 
             rospy.loginfo('\n\nACTION ' + str(env.num_actions))
-            
+
             pokeOutcomes = robot.doPoke(*action)
             if not all(pokeOutcomes):
                 #tuck_arms(True) TODO
@@ -88,7 +88,7 @@ def main(env, robot, agent):
             if not all(resetOutcomes):
                 #tuck_arms(True) TODO
                 break
-                
+
             new_obs, reward = env.getObservation()
             agent.learn(obs, action, new_obs, reward)
             obs = new_obs
