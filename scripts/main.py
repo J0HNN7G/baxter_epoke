@@ -1,8 +1,8 @@
-#!/usr/bin/env python
-# kinetic
-
 #!/usr/bin/env python3
 # noetic
+
+#!/usr/bin/env python
+# kinetic
 
 
 # general
@@ -67,9 +67,15 @@ LENGTH_SPLIT = 3
 def main(env, robot, agent):
     for n in range(EPISODES):
         rospy.loginfo('\n\n\nEPISODE ' + str(n))
-        env.reset()
-        obs = env.getState()
 
+        # robot full reset
+        env.endSceneMoveIt()
+        robot.setupArmPoses()
+        env.setupSceneMoveIt()
+
+        env.reset()
+
+        obs = env.getState()
         while not env.done():
             action = agent.act(obs)
 
@@ -77,7 +83,6 @@ def main(env, robot, agent):
 
             pokeOutcomes = robot.doPoke(*action)
             if not all(pokeOutcomes):
-                #tuck_arms(True) TODO
                 break
             else:
                 env.num_actions += 1
@@ -86,7 +91,6 @@ def main(env, robot, agent):
             resetOutcomes = robot.doReset()
             env.removeCubeMoveIt()
             if not all(resetOutcomes):
-                #tuck_arms(True) TODO
                 break
 
             new_obs, reward = env.getObservation()
