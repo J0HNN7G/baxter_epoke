@@ -39,7 +39,7 @@ GZ_CUBE_LINK_NAME = 'cube::cube_link'
 GZ_CUBE_LENGTH = 0.05
 # rviz moveit reference frame in z-axis for cube center (in metres)
 RVIZ_CUBE_Z = (-0.55 + 0.73 / 2 + 0.07 / 2 + 0.05)
-# Gazebo to MoveIt Rviz difference in z-axis for world frame 
+# Gazebo to MoveIt Rviz difference in z-axis for world frame
 GZ_RVIZ_DIFF_Z = -0.923990705439
 
 
@@ -55,11 +55,10 @@ class Environment:
     num_actions = -1
 
     # maximum amount of time after action for episode
-    max_time = -1 
+    max_time = -1
 
     # start_time of current episode (in seconds)
     start_time = -1
-
 
     # reward for failure 
     FAIL_REWARD = -10
@@ -73,7 +72,7 @@ class Environment:
     cube = None
 
     # MoveIt robot commander for scene frame
-    robot = None 
+    robot = None
 
     # scene which MoveIt is using for planning
     scene = None
@@ -112,7 +111,7 @@ class Environment:
     def done(self):
         """
         Check if current world episode is done
-        
+
         return: True if cube has fallen, number of actions or time exceeds maximum
         """
         return self.cubeHasFallen() or (self.num_actions >= self.max_actions) or (self.getElapsedTime() > self.max_time)
@@ -153,7 +152,7 @@ class Environment:
         """
         Calculate reward from cube link pose
 
-        return: fail reward if cube has fallen, otherwise absolute 
+        return: fail reward if cube has fallen, otherwise absolute
                 distance from center of workspace
         """
         if pose.position.z < GZ_BOX_HEIGHT:
@@ -190,7 +189,7 @@ class Environment:
         """
         Get current reward from environment
 
-        return: fail reward if cube has fallen, otherwise absolute 
+        return: fail reward if cube has fallen, otherwise absolute
                 distance from center of workspace
         """
         pose = self.cube.getPose()
@@ -201,7 +200,7 @@ class Environment:
         """
         Wrapper for getting state and reward in one function
 
-        return: [x, y, qx, qy, qz, qw], fail reward if cube has fallen, 
+        return: [x, y, qx, qy, qz, qw], fail reward if cube has fallen,
                 otherwise absolute distance from center of workspace
         """
         pose = self.cube.getPose()
@@ -221,7 +220,7 @@ class Environment:
 
     def getElapsedTime(self):
         """
-        Get episode time elapsed (in seconds) 
+        Get episode time elapsed (in seconds)
 
         return: episode time (in seconds)
         """

@@ -1,8 +1,8 @@
-#!/usr/bin/env python
-# kinetic
-
 #!/usr/bin/env python3
 # noetic
+
+#!/usr/bin/env python
+# kinetic
 
 
 # general
@@ -67,6 +67,12 @@ ACTION_SPLITS = np.array([WIDTH_SPLIT, HEIGHT_SPLIT, THETA_SPLIT, LENGTH_SPLIT])
 def main(env, robot, agent):
     for n in range(EPISODES):
         rospy.loginfo('\n\n\nEPISODE ' + str(n))
+
+        # robot full reset
+        env.endSceneMoveIt()
+        robot.setupArmPoses()
+        env.setupSceneMoveIt()
+
         env.reset()
         obs = env.getDiscreteState()
 

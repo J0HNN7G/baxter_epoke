@@ -203,7 +203,11 @@ def formatPoke(x, y, theta, length):
 
 
 def reorientYaw(theta):
-    """Make theta (in radians) perpendicular so yaw is as desired during poke"""
+    """
+    Make theta (in radians) perpendicular so yaw is as desired during poke
+
+    return: perpendicular angle for theta in wrist range
+    """
     theta += np.pi / 2
     if theta > WRIST_ABS_MAX:
         theta -= np.pi
@@ -249,7 +253,7 @@ class Baxter:
             control = moveit_commander.MoveGroupCommander(eef)
 
             # prevent fast motion
-            control.set_max_velocity_scaling_factor(0.5)
+            control.set_max_velocity_scaling_factor(0.3)
             control.set_max_acceleration_scaling_factor(0.3)
 
             controls[eef] = control
@@ -357,7 +361,7 @@ class Baxter:
         self.controls['both_arms'].set_joint_value_target(REST_JOINT_VALUES)
 
         rospy.loginfo("Resetting: Planning reset joint values")
-        plan = multiTryPlan(self.controls['both_arms']) # is this actually doing something? verify
+        plan = multiTryPlan(self.controls['both_arms'], max_tries=1) # is this actually doing something? verify
 
         if plan is None:
             rospy.loginfo("Resetting: [ERROR] No reset joint value plan")
@@ -372,7 +376,7 @@ class Baxter:
         Plan and execute post-poke reset to pre-poke pose
 
         return: (bool1, bool2, bool3, bool4); bool1 is True if successful upward motion plan found
-                bool2 is True is succesful upward motion execution; bool3 is True if succesful if joint value 
+                bool2 is True is succesful upward motion execution; bool3 is True if succesful if joint value
                 rest plan is executed found; bool4 is True if joint value rest plan is executed successfully
         """
         upwardPlan = self.planRightArmUp()
