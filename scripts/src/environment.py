@@ -22,7 +22,7 @@ from . import utils
 # ------------------------------ Constants ------------------------------
 
 # Maximum amount of time (in seconds) after actions have been committed at which a reset will be done
-MAX_AFTER_TIME = 30
+MAX_AFTER_TIME = 60
 # Maximum number of actions in an episode
 MAX_ACTIONS = 6
 
@@ -60,8 +60,14 @@ class Environment:
     # start_time of current episode (in seconds)
     start_time = -1
 
+
     # reward for failure 
     FAIL_REWARD = -10
+
+
+    # discrete quantization for normalized state axis dimensions ([-1,1])
+    state_incs = None
+
 
     # cube object that the agent is poking
     cube = None
@@ -78,12 +84,21 @@ class Environment:
         self.scene.remove_world_object('cube')
 
 
-    def __init__(self, max_actions=MAX_ACTIONS, max_time=MAX_AFTER_TIME):
-        """Initialize episode parameters, cube publisher, cube subscriber"""
+    def __init__(self, state_splits=None, max_actions=MAX_ACTIONS, max_time=MAX_AFTER_TIME):
+        """
+        Initialize episode parameters, cube publisher, cube subscriber
+
+        max_actions
+        """
         self.max_actions = max_actions
         self.max_time = max_time
         self.cube = Cube()
         self.num_pokes = 0
+
+        # for discretizing environment
+        if state_splits is not None:
+            self.state_incs = 2.0 / state_splits
+
         self.start_time = rospy.get_time()
 
 
@@ -105,17 +120,33 @@ class Environment:
 
     def calcState(self, pose):
         """
-        Get x,y of centre and orientation of cube normalized to [-1,1]
+        Get x,y of centre and orientation of cube normalized to [-1,1] (assuming cube is in workspace area)
 
         pose: geometry_msgs.msg for cube link pose
         return: [x, y, qx, qy, qz, qw]
         """
         position = [ utils.width2norm(pose.position.x), utils.height2norm(pose.position.y)]
-        orientation = [ utils.angle2norm(a) for a in  Rotation.from_quat( [ pose.orientation.x,
-                                                                      pose.orientation.y,
-                                                                      pose.orientation.z,
-                                                                      pose.orientation.w]).as_euler('ZYX')]
+        orientation = utils.quat2arr(pose.orientation)
+
         return np.concatenate((position, orientation))
+
+
+    def calcDiscreteState(self, pose):
+        """
+        Get x,y of centre and orientation of object discretized from 
+        continuous normalized state based on state_splits from
+        environment initialization
+
+        pose: geometry_msgs.msg for cube link pose
+        return: [x, y, qx, qy, qz, qw]
+        """
+        if self.state_incs is None:
+            raise ValueError('State splits are not initialized!')
+
+        cont_state = self.calcState(pose)
+        discrete_state = (cont_state + 1) / self.state_incs
+        print(discrete_state)
+        return discrete_state.astype(np.int)
 
 
     def calcReward(self, pose):
@@ -140,7 +171,19 @@ class Environment:
         return: [x, y, qx, qy, qz, qw]
         """
         pose = self.cube.getPose()
-        return self.calcState(pose)
+        return self.calcContState(pose)
+
+
+    def getDiscreteState(self):
+        """
+        Get x,y of centre and orientation of object discretized from 
+        continuous normalized state based on state splits from environment
+        initialization
+
+        return: [x, y, qx, qy, qz, qw]
+        """
+        pose = self.cube.getPose()
+        return self.calcDiscreteState(pose)
 
 
     def getReward(self):
@@ -163,6 +206,17 @@ class Environment:
         """
         pose = self.cube.getPose()
         return self.calcState(pose), self.calcReward(pose)
+
+
+    def getDiscreteObservation(self):
+        """
+        Wrapper for getting state and reward in one function
+
+        return: [x, y, qx, qy, qz, qw] discretized, fail reward if cube has fallen, 
+                otherwise absolute distance from center of workspace
+        """
+        pose = self.cube.getPose()
+        return self.calcDiscreteState(pose), self.calcReward(pose)
 
 
     def getElapsedTime(self):

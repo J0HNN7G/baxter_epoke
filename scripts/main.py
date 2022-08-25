@@ -53,13 +53,13 @@ epsilon_decay_value = epsilon/(END_EPSILON_DECAYING - START_EPSILON_DECAYING)
 # state splits
 WIDTH_SPLIT = 8
 HEIGHT_SPLIT = 8
-ROLL_SPLIT = 8
-PITCH_SPLIT = 8
-YAW_SPLIT = 8
+QUAT_SPLIT = 8
+STATE_SPLITS = np.array([WIDTH_SPLIT, HEIGHT_SPLIT] + [QUAT_SPLIT] * 4) 
 
 # action splits
 THETA_SPLIT = 8
 LENGTH_SPLIT = 3
+ACTION_SPLITS = np.array([WIDTH_SPLIT, HEIGHT_SPLIT, THETA_SPLIT, LENGTH_SPLIT])
 
 
 # ------------------------------ Main ------------------------------
@@ -68,7 +68,7 @@ def main(env, robot, agent):
     for n in range(EPISODES):
         rospy.loginfo('\n\n\nEPISODE ' + str(n))
         env.reset()
-        obs = env.getState()
+        obs = env.getDiscreteState()
 
         while not env.done():
             action = agent.act(obs)
@@ -77,7 +77,6 @@ def main(env, robot, agent):
 
             pokeOutcomes = robot.doPoke(*action)
             if not all(pokeOutcomes):
-                #tuck_arms(True) TODO
                 break
             else:
                 env.num_actions += 1
@@ -86,10 +85,9 @@ def main(env, robot, agent):
             resetOutcomes = robot.doReset()
             env.removeCubeMoveIt()
             if not all(resetOutcomes):
-                #tuck_arms(True) TODO
                 break
 
-            new_obs, reward = env.getObservation()
+            new_obs, reward = env.getDiscreteObservation()
             agent.learn(obs, action, new_obs, reward)
             obs = new_obs
 
@@ -100,7 +98,7 @@ if __name__ == '__main__':
         setupNode()
 
         # environment
-        env = Environment()
+        env = Environment(STATE_SPLITS)
         env.setupSceneMoveIt()
 
         # body
