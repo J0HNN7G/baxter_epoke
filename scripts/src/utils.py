@@ -7,10 +7,10 @@ import numpy as np
 # ------------------------------ Constants ------------------------------
 
 # rectangular workspace configuration (in metres) for poking in world frame
-WSPACE_CENTRE_X = 0.60 
-WSPACE_CENTRE_Y = 0
-WSPACE_WIDTH = 0.22
-WSPACE_HEIGHT = 0.31 
+WSPACE_CENTRE_X = 0.6 
+WSPACE_CENTRE_Y = -0.4
+WSPACE_WIDTH = 0.2
+WSPACE_HEIGHT = 0.2 
 
 
 # ------------------------------ Conversion Helpers ------------------------------
@@ -95,6 +95,13 @@ def angle2norm(value):
     return scale2scale(value,                       
                        oMin = -np.pi, 
                        oMax = np.pi) 
+
+
+def discPoke2norm(discPoke, action_splits):
+    """Convert discrete poke based on number of actions splits to poke"""
+    contPoke = discPoke.astype(float) / action_splits
+    contPoke[:3] = prop2norm(contPoke[:3])
+    return contPoke
 
 
 # ------------------------------ Actions ------------------------------

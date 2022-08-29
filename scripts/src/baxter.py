@@ -22,12 +22,12 @@ from . import utils
 # ------------------------------ Constants ------------------------------
 
 # maximum absolute angle for wrist (in radians), i.e., +- joint limit
-WRIST_ABS_MAX = np.pi * 175 / 180
+WRIST_ABS_MAX = np.pi * 150 / 180
 
 # poke specifications (in metres) in world frame
-POKE_MIN_LENGTH = 0
-POKE_MAX_LENGTH = 0.05
-POKE_HEIGHT = -0.1
+POKE_MIN_LENGTH = 0.02
+POKE_MAX_LENGTH = 0.07
+POKE_HEIGHT = 0.05
 
 # right arm rest pose (Not in use, but useful for world frame values)
 RIGHT_ARM_REST_POSE = geometry_msgs.msg.Pose()
@@ -40,20 +40,20 @@ RIGHT_ARM_REST_POSE.orientation.z = 0
 RIGHT_ARM_REST_POSE.orientation.w = 0
 
 # joint values for both_arms to be in pre-poke poses
-REST_JOINT_VALUES = [1.379237576377398,
-                     -1.3552826203873272,
-                     -0.7101624079848046,
-                     2.55631837129957,
-                     0.30652245076879225,
-                     0.4115804369116125,
-                     1.3712037894457447,
-                     0.8472704724475024,
-                     -0.8636687059230441,
-                     0.5490456620193518,
-                     1.7160365713575505,
-                     -0.46433543710437775,
-                     0.8569118416172481,
-                     2.387166897523091]
+REST_JOINT_VALUES = [  1.3791690104191652, 
+                      -1.3537128540136036, 
+                      -0.7096429083012437, 
+                       2.557328182724321, 
+                       0.3063591683569724, 
+                       0.411575038611697, 
+                       1.3713077681418264, 
+                       0.029683950194229425, 
+                       -1.209466685893073, 
+                       0.6645121386066277, 
+                       1.7831835515278982, 
+                       -0.24939725253816913, 
+                       1.0824385028832113, 
+                       1.5664461589496659]
 
 # maximum number of tries when planning with MoveIt
 MAX_TRIES = 10
@@ -232,7 +232,7 @@ class Baxter:
     def start(self):
         """Get Baxter ready for executing poke actions"""
         self.setupControls()
-        #self.calibrateGrippers() # comment out if need an initial speed up (slow to do)
+        self.calibrateGrippers() # comment out if need an initial speed up (slow to do)
         self.setupGrippers()
         self.setupArmPoses()
 
@@ -389,6 +389,7 @@ class Baxter:
 
         if not upwardSuccess:
             return (True, False, False, False)
+
 
         if self.planBothArmReset():
             rospy.loginfo("Resetting: Executing reset joint values")

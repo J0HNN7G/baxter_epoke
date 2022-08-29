@@ -21,18 +21,17 @@ from . import utils
 
 # ------------------------------ Constants ------------------------------
 
-# Maximum amount of time (in seconds) after actions have been committed at which a reset will be done
-MAX_AFTER_TIME = 60
 # Maximum number of actions in an episode
-MAX_ACTIONS = 6
-
-# failure for reward
-FAIL_REWARD = -10
+MAX_ACTIONS = 5
+# penalty for failure
+FALL_PENALTY = -10
+# maximum reward in reward calculation
+MAX_REWARD = 100
 
 # height of cube center (in metres) for Gazebo world frame
-GZ_CUBE_HEIGHT = 0.825
+GZ_CUBE_HEIGHT = 0.975
 # height of cube floor (in metres) for Gazebo world frame
-GZ_BOX_HEIGHT = 0.8
+GZ_BOX_HEIGHT = 0.95
 # name of cube link from message in /gazebo/link_states topic
 GZ_CUBE_LINK_NAME = 'cube::cube_link'
 # gazebo cube length (in metres)
@@ -54,14 +53,8 @@ class Environment:
     # number of actions taken by agent in episode
     num_actions = -1
 
-    # maximum amount of time after action for episode
-    max_time = -1
-
     # start_time of current episode (in seconds)
     start_time = -1
-
-    # reward for failure 
-    FAIL_REWARD = -10
 
 
     # discrete quantization for normalized state axis dimensions ([-1,1])
@@ -83,14 +76,13 @@ class Environment:
         self.scene.remove_world_object('cube')
 
 
-    def __init__(self, state_splits=None, max_actions=MAX_ACTIONS, max_time=MAX_AFTER_TIME):
+    def __init__(self, state_splits=None, max_actions=MAX_ACTIONS):
         """
         Initialize episode parameters, cube publisher, cube subscriber
 
         max_actions
         """
         self.max_actions = max_actions
-        self.max_time = max_time
         self.cube = Cube()
         self.num_pokes = 0
 
@@ -112,9 +104,11 @@ class Environment:
         """
         Check if current world episode is done
 
-        return: True if cube has fallen, number of actions or time exceeds maximum
+        return: True if cube has fallen or number of actions exceeds maximum
         """
-        return self.cubeHasFallen() or (self.num_actions >= self.max_actions) or (self.getElapsedTime() > self.max_time)
+        if not self.cubeHasFallen():
+            print('\n\nCube height: {}\n\n'.format(self.cube.subCube.link_pose.position.z))
+        return self.cubeHasFallen() or (self.num_actions >= self.max_actions)
 
 
     def calcState(self, pose):
@@ -144,7 +138,6 @@ class Environment:
 
         cont_state = self.calcState(pose)
         discrete_state = (cont_state + 1) / self.state_incs
-        print(discrete_state)
         return discrete_state.astype(np.int)
 
 
@@ -156,10 +149,11 @@ class Environment:
                 distance from center of workspace
         """
         if pose.position.z < GZ_BOX_HEIGHT:
-            return FAIL_REWARD
+            return FALL_PENALTY
         else:
-            reward = np.abs(utils.width2norm(pose.position.x)) \
-                   + np.abs(utils.height2norm(pose.position.y))
+            dist = np.sqrt(utils.width2norm(pose.position.x) ** 2 + utils.height2norm(pose.position.y) ** 2)
+            distProp = dist / np.sqrt(2) 
+            reward = distProp * (MAX_REWARD / self.max_actions) + self.num_actions * -5  
             return reward
 
 
