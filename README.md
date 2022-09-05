@@ -42,7 +42,13 @@ when left uncommented
 ```
 gave me issues with using MoveIt to control Baxter.  
 
-#### 6. Build workspace
+#### 6. Install missing system dependencies
+```
+cd ~/baxter_ws/
+rosdep install --from-paths src --ignore-src -r -y
+```
+
+#### 7. Build workspace
 ```
 cd ~/baxter_ws/
 catkin build
